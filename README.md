@@ -16,6 +16,8 @@ Needs node.js software to work.
 -------------------  
 Recomended values:  
 -------------------  
+param_out_reducer_max: 1  
+param_window_size: 20 to 40  
 thres_min: 10 to 20  
 param_peak_reactivity: 0 to 5  
 param_decr_count_thres: 150 to 300  

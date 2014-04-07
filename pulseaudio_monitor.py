@@ -102,32 +102,50 @@ class PeakMonitor(object):
 
 def main():
 	monitor = PeakMonitor(SINK_NAME, METER_RATE)
-	thres_min= 15				# Minimun threshold.
-	thres= thres_min			# The threshold.
-	thres_max= thres_min		# Max peak vlue.
-	thres_dec_count= 0			# Sample meter to detect volume drop down.
+	thres_min= 15					# Minimun threshold.
+	thres= thres_min				# The threshold.
+	thres_max= thres_min			# Max peak vlue.
+	thres_dec_count= 0				# Sample meter to detect volume drop down.
+	out_reducer_count=0				# Sample meter to reduce output saturation. This counts the positive samples
+	out_reducer_window_count = 0	# Sample meter to reduce output saturation. This counts the samples of thw window.
+	flag_sample_reducer = False		# If true start to count samples until param_window_size is reached
 	
-	param_peak_reactivity= 5 	# Threshold under peak. Highers values means higher reactivity to peak vibratos and near peak reverbs.
-	param_decr_count_thres= 300	# Number of continued sub-threshold samples to detect volume drop.
-	param_decr_value= 0.1		# Highers values decrease the threshold faster whean param_thres_count is not reached, i.e pendient after peak, before drop.
-	param_decr_value_on_drop= 5	# Highers values decrease the threshold faster whean param_thres_count has reached, i.e pendient after drop.
+	param_out_reducer_max= 1		# Max number of samples that triggers output in a window of consecutive samples
+	param_window_size= 20			# Size of the window
+	param_peak_reactivity= 2 		# Threshold under peak. Highers values means higher reactivity to peak vibratos and near peak reverbs.
+	param_decr_count_thres= 500		# Number of continued sub-threshold samples to detect volume drop.
+	param_decr_value= 0.1			# Highers values decrease the threshold faster whean param_thres_count is not reached, i.e pendient after peak, before drop.
+	param_decr_value_on_drop= 5		# Highers values decrease the threshold faster whean param_thres_count has reached, i.e pendient after drop.
 
 	for sample in monitor:
+		
+		if flag_sample_reducer:
+			out_reducer_window_count += 1
+			
 		if sample>thres:
-			print random.choice(colors),';',random.choice(colors),';',random.choice(colors)
-			sys.stdout.flush()
+			if out_reducer_count < param_out_reducer_max:
+				flag_sample_reducer = True
+				out_reducer_count += 1
+				print random.choice(colors),';',random.choice(colors),';',random.choice(colors)
+				sys.stdout.flush()
 			thres_dec_count=0
 			if sample > thres_max:
 				thres_max = sample;
 				thres = thres_max-param_peak_reactivity
 		else:
-			thres_dec_count = thres_dec_count+1
+			thres_dec_count += 1
 			if thres_dec_count >= param_decr_count_thres:
-				thres_max=thres_max-param_decr_value_on_drop
-				thres=thres-param_decr_value_on_drop
+				thres_max -= param_decr_value_on_drop
+				thres -= param_decr_value_on_drop
 			else:
-				thres_max=thres_max-param_decr_value
-				thres=thres-param_decr_value
+				thres_max -= param_decr_value
+				thres -= param_decr_value
+				
+		if out_reducer_window_count == param_window_size:
+			flag_sample_reducer = False
+			out_reducer_count = 0
+			out_reducer_window_count = 0
+			
 		if thres < thres_min:
 			thres = thres_min
 			thres_max = thres + param_peak_reactivity
