@@ -5,6 +5,7 @@ Keyboard Led Manager for MSI keyboards.
 Using code of:  
 https://github.com/wearefractal/msi-keyboard  
 https://github.com/Valodim/python-pulseaudio  
+http://freshfoo.com/blog/pulseaudio_monitoring  
 
 Many thanks to them.  
 
